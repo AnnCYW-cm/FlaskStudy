@@ -1,9 +1,16 @@
 from flask import Flask 
-from flask_bootstrap import Bootstrap
+from  import Bootstrap
 from flask import Flask, render_template
+from flask_momeflask_bootstrapnt import Moment
+from datetime import datetime
+
 
 app = Flask(__name__)
 bootstrap = Bootstrap(app)
+moment = Moment(app)
+app.config['SECRET_KEY'] = 'hard to guess string'
+
+
 
 #@app.route('/')
 #def index():	
@@ -12,6 +19,11 @@ bootstrap = Bootstrap(app)
 #@app.route('/user/<name>')
 #def user(name):
     #return '<h1>Hello, {}!</h1>'.format(name)
+
+@app.route('/')
+def func():
+    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    return render_template('index.html', current_time=current_time)
 
 @app.route('/')
 def index():

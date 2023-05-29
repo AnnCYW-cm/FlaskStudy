@@ -19,14 +19,13 @@ app.config['SECRET_KEY'] = 'hard to guess string'
 #def user(name):
     #return '<h1>Hello, {}!</h1>'.format(name)
 
-@app.route('/')
-def func():
-    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    return render_template('index.html', current_time=current_time)
-
+# @app.route('/')
+# def func():
+#     return render_template('index.html', current_time=datetime.utcnow())
+    
 @app.route('/')
 def index():
-   return render_template('index.html')
+   return render_template('index.html', current_time=datetime.utcnow())
 
 @app.route('/user/<name>')
 def user(name):

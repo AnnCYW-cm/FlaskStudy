@@ -1,7 +1,7 @@
 from flask import Flask 
-from  import Bootstrap
+from flask_bootstrap import Bootstrap
 from flask import Flask, render_template
-from flask_momeflask_bootstrapnt import Moment
+from flask_moment import Moment
 from datetime import datetime
 
 
@@ -9,7 +9,6 @@ app = Flask(__name__)
 bootstrap = Bootstrap(app)
 moment = Moment(app)
 app.config['SECRET_KEY'] = 'hard to guess string'
-
 
 
 #@app.route('/')

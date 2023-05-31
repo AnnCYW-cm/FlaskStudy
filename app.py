@@ -1,19 +1,56 @@
+import os
 from flask import Flask, render_template, session, redirect, url_for, flash
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
+from flask_sqlalchemy import SQLAlchemy
+
+
+basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'hard to guess string'
 
+#应用使用过的URL保存到Flask配置对象的SQLALCHEMY_DATABASE_URL键中
+app.config['SQLALCHEMY_DATABASE_URI'] =\
+   'sqlite:///' + os.path.join(basedir, 'data.sqlite')
+
+#设成False后，在不需要跟踪对象变化的时候降低内存消耗
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 bootstrap = Bootstrap(app)
 moment = Moment(app)
+#db是SQLAlchemy的实例，通过db的赋值，可以获得Flask-SQLAlchemy提供的所有功能
+db = SQLAlchemy(app)
+
+
+#定义Role和User模型
+class Role(db.Model):
+   __tablename__= 'roles' 
+   id = db.Column(db.Integer, primary_key=True)
+   name = db.Column(db.String(64), unique=True)
+   users = db.relationship('User', backref='role', lazy='dynamic')
+   
+   def __repr__(self):
+      return '<Role %r>' % self.name
+   
+class User(db.Model):
+   __tablename__ = 'users' 
+   id = db.Column(db.Integer, primary_key=True)
+   username = db.Column(db.String(64), unique=True, index=True)
+   role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
+   
+   def __repr__(self):
+      return '<User %r>' % self.username
+   
+
 class NameForm(FlaskForm):
     name = StringField('What is your name?', validators=[DataRequired()])
     submit = SubmitField('Submit')
+
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -27,11 +64,21 @@ def internal_server_error(e):
 def index():
    form = NameForm()
    if form.validate_on_submit():
-      old_name = session.get('name')
-      if old_name is not None and old_name !=form.name.data:
-         flash('looks like you have changed your name!')
-      session['name'] = form.name.data
+      user = User.query.filter_by(username=form.name.data).first()
+      if user is None:
+         user = User(username=form.name.data)
+         db.session.add(user)
+         db.session.commit()
+         session['known'] = False
+      else:
+         session['known'] = True
+      session['name'] = form.name.data 
       return redirect(url_for('index'))
-   return render_template('index.html', form=form, name=session.get('name'))
+   return render_template('index.html', form=form, name=session.get('name'),
+                          known=session.get('known', False))
+
+@app.make_shell_context_processor
+def make_shell_context():
+   return dict(db=db, User=User, Role=Role)
 
 

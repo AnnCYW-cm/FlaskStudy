@@ -6,12 +6,14 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 app = Flask(__name__)
+
 app.config['SECRET_KEY'] = 'hard to guess string'
 
 #应用使用过的URL保存到Flask配置对象的SQLALCHEMY_DATABASE_URL键中
@@ -25,7 +27,7 @@ bootstrap = Bootstrap(app)
 moment = Moment(app)
 #db是SQLAlchemy的实例，通过db的赋值，可以获得Flask-SQLAlchemy提供的所有功能
 db = SQLAlchemy(app)
-
+migrate = Migrate(app, db)
 
 #定义Role和User模型
 class Role(db.Model):
@@ -77,7 +79,7 @@ def index():
    return render_template('index.html', form=form, name=session.get('name'),
                           known=session.get('known', False))
 
-@app.make_shell_context_processor
+@app.shell_context_processor
 def make_shell_context():
    return dict(db=db, User=User, Role=Role)
 
